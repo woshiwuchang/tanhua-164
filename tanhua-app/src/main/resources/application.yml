@@ -1,0 +1,28 @@
+server: #服务端口
+  port: 18080
+spring:
+  application:
+    name: tanhua-app
+  redis:  #redis配置
+    port: 6379
+    host: 192.168.136.160
+  cloud:  #nacos配置
+    nacos:
+      discovery:
+        server-addr: 192.168.136.160:8848
+dubbo:    #dubbo配置
+  registry:
+    address: spring-cloud://localhost
+    check: false # 是否检测注册中心是否存在
+  consumer:
+    check: false # 是否检测提供者是否存在
+    timeout: 50000000
+    retries: 0
+  cloud:
+    subscribed-services: tanhua-dubbo-db #声明订阅的服务
+tanhua:
+  sms:
+    access-key: LTAI4Fi4GX8hQiYRr719FUjH
+    secret: Y5Q4Xaft5LZjMCbSKIETmbViE6o7vh
+    sign-name: 投票系统
+    template-code: SMS_177539791
