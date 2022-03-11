@@ -1,5 +1,6 @@
 package com.itheima.service.db.impl;
 
+import cn.hutool.crypto.SecureUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.itheima.domain.db.User;
 import com.itheima.mapper.UserMapper;
@@ -12,6 +13,7 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
     @Override
     public Long save(User user) {
+        user.setPassword(SecureUtil.md5(user.getPassword()));
         //插入user
         userMapper.insert(user);
         //返回id

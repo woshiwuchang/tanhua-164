@@ -10,6 +10,10 @@ spring:
     nacos:
       discovery:
         server-addr: 192.168.136.160:8848
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 dubbo:    #dubbo配置
   registry:
     address: spring-cloud://localhost
@@ -26,3 +30,13 @@ tanhua:
     secret: Y5Q4Xaft5LZjMCbSKIETmbViE6o7vh
     sign-name: 投票系统
     template-code: SMS_177539791
+  oss:
+    accessKey: LTAI4Fi4GX8hQiYRr719FUjH
+    secret: Y5Q4Xaft5LZjMCbSKIETmbViE6o7vh
+    endpoint: https://oss-cn-guangzhou.aliyuncs.com
+    bucketName: tanhua-gz164
+    url: https://tanhua-gz164.oss-cn-guangzhou.aliyuncs.com
+  aip:
+    appId: 25735372
+    apiKey: Bkmkh3Zc1GMUHg41uogqGBaG
+    secretKey: 6UG8MlK6mnHSqnouMMLyfgGSD2uyrm0b

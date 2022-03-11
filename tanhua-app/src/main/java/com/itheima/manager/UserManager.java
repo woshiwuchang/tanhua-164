@@ -4,21 +4,30 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
+import com.itheima.app.interceptor.UserHolder;
+import com.itheima.autoconfig.face.AipFaceProperties;
+import com.itheima.autoconfig.face.AipFaceTemplate;
+import com.itheima.autoconfig.oss.OssTemplate;
 import com.itheima.autoconfig.sms.SmsProperties;
 import com.itheima.autoconfig.sms.SmsTemplate;
 import com.itheima.domain.db.User;
+import com.itheima.domain.db.UserInfo;
 import com.itheima.domain.vo.ErrorResult;
+import com.itheima.service.UserInfoService;
 import com.itheima.service.UserService;
 import com.itheima.util.ConstantUtil;
 import com.itheima.util.JwtUtil;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +40,12 @@ public class UserManager {
     private SmsTemplate smsTemplate;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @DubboReference
+    private UserInfoService userInfoService;
+    @Autowired
+    private AipFaceTemplate aipFaceTemplate;
+    @Autowired
+    private OssTemplate ossTemplate;
 
     //保存用户
     public Long save(User user) {
@@ -53,7 +68,7 @@ public class UserManager {
         //生成验证码
         String code = RandomUtil.randomNumbers(6);
         //发送短信
-        code="123456";
+        code = "123456";
         //smsTemplate.sendSms(phone, code);
         stringRedisTemplate.opsForValue().set(ConstantUtil.SMS_CODE + phone, code, Duration.ofMinutes(5));
     }
@@ -98,8 +113,45 @@ public class UserManager {
         //从redis中把验证码删除
         stringRedisTemplate.delete(ConstantUtil.SMS_CODE + phone);
         Map<String, Object> tokenMap = new HashMap<>();
-        tokenMap.put("token",token);
-        tokenMap.put("isNew",isNew);
+        tokenMap.put("token", token);
+        tokenMap.put("isNew", isNew);
         return ResponseEntity.ok(tokenMap);
+    }
+
+    public ResponseEntity saveUserInfo(UserInfo userInfo, String token) {
+        User user = UserHolder.get();
+        userInfo.setId(user.getId());
+        userInfoService.save(userInfo);
+        return ResponseEntity.ok(null);
+    }
+
+    //通过token取user对象
+    public User findUserFromToken(String token) {
+        if (StrUtil.isNotBlank(token)) {
+            String userJson = stringRedisTemplate.opsForValue().get(ConstantUtil.USER_TOKEN + token);
+            if (StrUtil.isNotBlank(userJson)) {
+                return JSON.parseObject(userJson, User.class);
+            }
+        }
+        return null;
+    }
+
+    //完善用户头像
+    public ResponseEntity saveUserInfoHeard(MultipartFile headPhoto, String token) throws IOException {
+        User user = UserHolder.get();
+        //百度认证人脸
+        if (!aipFaceTemplate.detect(headPhoto.getBytes())) {
+            return ResponseEntity.status(500).body(ErrorResult.faceError());
+        }
+        //阿里oss保存头像
+        String url = ossTemplate.upload(headPhoto.getOriginalFilename(), headPhoto.getInputStream());
+        UserInfo userInfo = new UserInfo();
+        userInfo.setId(user.getId());
+        //头像
+        userInfo.setAvatar(url);
+        //封面
+        userInfo.setCoverPic(url);
+        userInfoService.updateHeadPhoto(userInfo);
+        return ResponseEntity.ok(null);
     }
 }
