@@ -18,4 +18,14 @@ private QuestionMapper questionMapper;
         qw.eq(Question::getUserId,userId);
         return questionMapper.selectOne(qw);
     }
+//修改陌生人问题
+    @Override
+    public void update(Question question) {
+        questionMapper.updateById(question);
+    }
+
+    @Override
+    public void save(Question question) {
+        questionMapper.insert(question);
+    }
 }

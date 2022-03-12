@@ -19,5 +19,15 @@ public class NotificationServiceImpl implements NotificationService {
         qw.eq(Notification::getUserId, userId);
         return notificationMapper.selectOne(qw);
     }
+
+    @Override
+    public void save(Notification notification) {
+        notificationMapper.insert(notification);
+    }
+
+    @Override
+    public void update(Notification notification) {
+        notificationMapper.updateById(notification);
+    }
 }
 
